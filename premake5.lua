@@ -41,6 +41,7 @@ workspace "COMP5892M-rt"
 		links "GLX"
 	
 	filter "system:windows"
+		links "opengl32"
 
 	filter "*"
 
