@@ -1,0 +1,6 @@
+COMP5892M-rt.sln
+src/main.vcxproj
+src/main.vcxproj.user
+external/x-glew.vcxproj
+external/x-glew.vcxproj
+external/x-glfw.vcxproj

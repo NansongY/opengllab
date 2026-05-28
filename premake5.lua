@@ -1,6 +1,6 @@
 workspace "COMP5892M-rt"
 	language "C++"
-	cppdialect "C++23"
+	cppdialect "C++latest"
 
 	platforms { "x64" }
 	configurations { "debug", "release" }
