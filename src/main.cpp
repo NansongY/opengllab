@@ -1,6 +1,9 @@
 #include <iostream>
 #include <GL/glew.h> 
 #include <GLFW/glfw3.h>
+#include <vector> 
+#include <fstream> 
+#include "ThreeDModel.h" 
 
 using namespace std;  
 
@@ -52,18 +55,29 @@ bool initializeGL()
 	
 	return true; 
 }
+
 int main(int argc, char**argv)
 {
-	// if (argc != 3) 
-	// { // bad arg count 
-	// // print an error message 
-	// std::cout << "Usage: " << argv[0] << " geometry material" << std::endl; 
-	// // and leave 
-	// return 0; 
-	// } // bad arg count 
+	if (argc != 3) 
+	{ // bad arg count 
+	// print an error message 
+	std::cout << "Usage: " << argv[0] << " geometry material" << std::endl; 
+	// and leave 
+	return 0; 
+	} // bad arg count 
 
 	if (!initializeGL()) return -1;
 
+	std::vector<ThreeDModel> objects; 
+	std::ifstream geometryFile(argv[1]); 
+	std::ifstream materialFile(argv[2]); 
+
+	// try reading it 
+	if (!(geometryFile.good()) || !(materialFile.good())) { 
+		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << 
+	std::endl; 
+		return 0; 
+	} // object read failed
 
 	return 0;
 }
