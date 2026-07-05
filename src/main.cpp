@@ -4,8 +4,97 @@
 #include <vector> 
 #include <fstream> 
 #include "ThreeDModel.h" 
+#include <array>
 
 using namespace std;  
+
+void ThreeDToGL(const ThreeDModel& model, 
+vector<array<float,3>>& out_vertices, 
+vector<array<float,2>>& out_uvs,  
+vector<array<float,3>>& out_normals)  
+{ 
+for (unsigned int face = 0; face < model.faceVertices.size(); face++) 
+        {  
+            for (unsigned int triangle = 0; triangle < model.faceVertices[face].size() - 2;  
+                 triangle++) 
+            {  
+                for (unsigned int vertex = 0; vertex < 3; vertex++) 
+                { 
+                unsigned int faceVertex = 0; 
+                    if (vertex != 0) 
+                        faceVertex = triangle + vertex; 
+					out_normals.push_back(array<float, 3>{ 
+                    model.normals[model.faceNormals[face][faceVertex]].x, 
+                    model.normals[model.faceNormals[face][faceVertex]].y, 
+                    model.normals[model.faceNormals[face][faceVertex]].z 
+                }); 
+                out_uvs.push_back(array<float, 2>{ 
+                    model.textureCoords[model.faceTexCoords[face][faceVertex]].x, 
+                    model.textureCoords[model.faceTexCoords[face][faceVertex]].y 
+                }); 
+                out_vertices.push_back(array<float, 3>{ 
+                    model.vertices[model.faceVertices[face][faceVertex]].x, 
+                    model.vertices[model.faceVertices[face][faceVertex]].y, 
+                    model.vertices[model.faceVertices[face][faceVertex]].z 
+                });
+				} // per vertex 
+        } // per triangle 
+    } // per face 
+}
+
+void loadModelGL(const std::vector<ThreeDModel>& objects,  
+    std::vector<GLuint>& vaoIDS, 
+    std::vector<GLuint>& vbIDS, 
+    std::vector<GLuint>& nbIDS, 
+    std::vector<GLuint>& tbIDS, 
+    std::vector<unsigned int>& count) 
+{ 
+    for (const auto& to : objects)  
+    { 
+        GLuint VertexArrayID; 
+        GLuint vertexbuffer; 
+        GLuint uvbuffer; 
+        GLuint normalbuffer;
+        glGenVertexArrays(1, &VertexArrayID); 
+        glBindVertexArray(VertexArrayID); 
+        std::vector<std::array<float,3>> n; 
+        std::vector<std::array<float, 2>> t; 
+        std::vector<std::array<float, 3>> v; 
+        ThreeDToGL(to, v, t, n);
+		glEnableVertexAttribArray(0); 
+        glGenBuffers(1, &vertexbuffer); 
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer); 
+        glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(std::array<float, 3>),  
+                     &v[0], GL_STATIC_DRAW); 
+        glVertexAttribPointer( 
+            0,                  // attribute 
+            3,                  // size (we have x y z) 
+            GL_FLOAT,           // type of each individual element 
+            GL_FALSE,           // normalized 
+            0,                  // stride 
+            (void*)0            // array buffer offset 
+        );
+		glEnableVertexAttribArray(1); 
+		glGenBuffers(1, &uvbuffer); 
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer); 
+		glBufferData(GL_ARRAY_BUFFER, t.size() * sizeof(std::array<float, 2>), &t[0],   
+					GL_STATIC_DRAW); 
+		glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,(void*)0); 
+		
+		glEnableVertexAttribArray(2); 
+		glGenBuffers(1, &normalbuffer); 
+		glBindBuffer(GL_ARRAY_BUFFER, normalbuffer); 
+		glBufferData(GL_ARRAY_BUFFER, n.size() * sizeof(std::array<float, 3>), &n[0], 
+		GL_STATIC_DRAW); 
+		glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,(void*)0); 
+		
+		vaoIDS.push_back(VertexArrayID); 
+		vbIDS.push_back(vertexbuffer); 
+		nbIDS.push_back(normalbuffer); 
+		tbIDS.push_back(uvbuffer); 
+		count.push_back(GLuint(v.size())); 
+	} // per object
+}
 
 bool initializeGL() 
 { 
@@ -93,6 +182,15 @@ int main(int argc, char**argv)
  
 	renderParameters.findLights(objects); 
 	std::cout << renderParameters.lights.size() << std::endl;
+
+	std::vector<GLuint> vaoIDS; 
+	std::vector<GLuint> vbIDS; 
+	std::vector<GLuint> nbIDS; 
+	std::vector<GLuint> tbIDS; 
+	std::vector<unsigned int> counts; 
+	
+	//setting up opengl 
+	loadModelGL(objects, vaoIDS, vbIDS, nbIDS, tbIDS, counts); 
 
 	return 0;
 }
