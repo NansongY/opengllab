@@ -74,10 +74,14 @@ int main(int argc, char**argv)
 
 	// try reading it 
 	if (!(geometryFile.good()) || !(materialFile.good())) { 
-		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << 
-	std::endl; 
+		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << std::endl; 
 		return 0; 
 	} // object read failed
+
+	RenderParameters renderParameters; //can be at file level. 
+ 
+	renderParameters.findLights(objects); 
+	std::cout << renderParameters.lights.size() << std::endl;
 
 	return 0;
 }
