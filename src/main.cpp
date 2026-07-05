@@ -14,32 +14,31 @@ vector<array<float,2>>& out_uvs,
 vector<array<float,3>>& out_normals)  
 { 
 for (unsigned int face = 0; face < model.faceVertices.size(); face++) 
-        {  
-            for (unsigned int triangle = 0; triangle < model.faceVertices[face].size() - 2;  
-                 triangle++) 
-            {  
-                for (unsigned int vertex = 0; vertex < 3; vertex++) 
-                { 
-                unsigned int faceVertex = 0; 
-                    if (vertex != 0) 
-                        faceVertex = triangle + vertex; 
-					out_normals.push_back(array<float, 3>{ 
-                    model.normals[model.faceNormals[face][faceVertex]].x, 
-                    model.normals[model.faceNormals[face][faceVertex]].y, 
-                    model.normals[model.faceNormals[face][faceVertex]].z 
-                }); 
-                out_uvs.push_back(array<float, 2>{ 
-                    model.textureCoords[model.faceTexCoords[face][faceVertex]].x, 
-                    model.textureCoords[model.faceTexCoords[face][faceVertex]].y 
-                }); 
-                out_vertices.push_back(array<float, 3>{ 
-                    model.vertices[model.faceVertices[face][faceVertex]].x, 
-                    model.vertices[model.faceVertices[face][faceVertex]].y, 
-                    model.vertices[model.faceVertices[face][faceVertex]].z 
-                });
-				} // per vertex 
-        } // per triangle 
-    } // per face 
+{  
+    for (unsigned int triangle = 0; triangle < model.faceVertices[face].size() - 2;  triangle++) 
+    {  
+        for (unsigned int vertex = 0; vertex < 3; vertex++) 
+        { 
+			unsigned int faceVertex = 0; 
+			if (vertex != 0) 
+				faceVertex = triangle + vertex; 
+			out_normals.push_back(array<float, 3>{ 
+				model.normals[model.faceNormals[face][faceVertex]].x, 
+				model.normals[model.faceNormals[face][faceVertex]].y, 
+				model.normals[model.faceNormals[face][faceVertex]].z 
+			}); 
+			out_uvs.push_back(array<float, 2>{ 
+				model.textureCoords[model.faceTexCoords[face][faceVertex]].x, 
+				model.textureCoords[model.faceTexCoords[face][faceVertex]].y 
+			}); 
+			out_vertices.push_back(array<float, 3>{ 
+				model.vertices[model.faceVertices[face][faceVertex]].x, 
+				model.vertices[model.faceVertices[face][faceVertex]].y, 
+				model.vertices[model.faceVertices[face][faceVertex]].z 
+			});
+		} // per vertex 
+    } // per triangle 
+} // per face 
 }
 
 void loadModelGL(const std::vector<ThreeDModel>& objects,  
