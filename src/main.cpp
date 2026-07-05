@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <vector> 
 #include <fstream> 
+#include <sstream>
 #include "ThreeDModel.h" 
 #include <array>
 
@@ -93,6 +94,69 @@ void loadModelGL(const std::vector<ThreeDModel>& objects,
 		tbIDS.push_back(uvbuffer); 
 		count.push_back(GLuint(v.size())); 
 	} // per object
+}
+
+bool readAndCompileShader(const char* shader_path, const GLuint& id) {  
+	string shaderCode; 
+    ifstream shaderStream(shader_path, std::ios::in); 
+    if (shaderStream.is_open()) { 
+        stringstream sstr; 
+        sstr << shaderStream.rdbuf(); 
+        shaderCode = sstr.str(); 
+        shaderStream.close(); 
+    } 
+    else { 
+        cout << "Impossible to open "<< shader_path << ". Are you in the right directory?"<< endl; 
+        return false; 
+    }
+	cout << "Compiling shader :"<< shader_path<<endl; 
+	char const* sourcePointer = shaderCode.c_str(); 
+	glShaderSource(id, 1, &sourcePointer, NULL); 
+	glCompileShader(id); 
+	GLint Result = GL_FALSE; 
+	int InfoLogLength; 
+	glGetShaderiv(id, GL_COMPILE_STATUS, &Result); 
+	glGetShaderiv(id, GL_INFO_LOG_LENGTH, &InfoLogLength); 
+	if (InfoLogLength > 0) { 
+		vector<char> shaderErrorMessage(InfoLogLength + 1); 
+		glGetShaderInfoLog(id, InfoLogLength, NULL, &shaderErrorMessage[0]); 
+		cout << &shaderErrorMessage[0] << endl; 
+	} 
+	cout << "Compilation of Shader: " << shader_path << " " << (Result == GL_TRUE ? "Success" : "Failed!") << endl; 
+	return Result == 1; 
+}
+
+void LoadShaders(GLuint& program, const char* vertex_file_path, const char* 
+fragment_file_path) 
+{ 
+    // Create the shaders - tasks 1 and 2  
+    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER); 
+    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    bool vok = readAndCompileShader(vertex_file_path, VertexShaderID); 
+    bool fok = readAndCompileShader(fragment_file_path, FragmentShaderID);
+	if (vok && fok) {     
+        GLint Result = GL_FALSE; 
+        int InfoLogLength; 
+ 
+        cout <<"Linking program"<<endl; 
+        program = glCreateProgram(); 
+        glAttachShader(program, VertexShaderID); 
+        glAttachShader(program, FragmentShaderID); 
+        glLinkProgram(program); 
+ 
+        glGetProgramiv(program, GL_LINK_STATUS, &Result); 
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &InfoLogLength); 
+        if (InfoLogLength > 0) { 
+            std::vector<char> ProgramErrorMessage(InfoLogLength + 1); 
+            glGetProgramInfoLog(program, InfoLogLength, NULL, &ProgramErrorMessage[0]); 
+            cout << &ProgramErrorMessage[0]; 
+        } 
+        std::cout << "Linking program: " << (Result == GL_TRUE ? "Success" : "Failed!") << std::endl; 
+    }else{ 
+        std::cout << "Program will not be linked: one of the shaders has an error" << std::endl; 
+    }
+	glDeleteShader(VertexShaderID); 
+	glDeleteShader(FragmentShaderID);
 }
 
 bool initializeGL() 
@@ -190,6 +254,9 @@ int main(int argc, char**argv)
 	
 	//setting up opengl 
 	loadModelGL(objects, vaoIDS, vbIDS, nbIDS, tbIDS, counts); 
+
+	GLuint programID = glCreateProgram(); 
+	LoadShaders(programID,"Basic.vert","Phong.frag");
 
 	return 0;
 }
