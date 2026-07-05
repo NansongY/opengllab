@@ -78,6 +78,17 @@ int main(int argc, char**argv)
 		return 0; 
 	} // object read failed
 
+	std::string s = argv[2]; 
+	//if is actually passing a material. This will trigger the modified obj read code. 
+	if (s.find(".mtl") != std::string::npos) { 
+		objects = ThreeDModel::ReadObjectStreamMaterial(geometryFile, materialFile); 
+	} 
+	
+	if (objects.size() == 0) { 
+		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << std::endl;
+		return 0; 
+	} // object read failed
+
 	RenderParameters renderParameters; //can be at file level. 
  
 	renderParameters.findLights(objects); 

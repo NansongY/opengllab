@@ -9,6 +9,7 @@ external/x-glfw.vcxproj.user
 # vscode settings files
 .vscode
 _build_
+.vs
 # excutable and library
 bin/*
 lib/*
