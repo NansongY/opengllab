@@ -43,7 +43,6 @@ void Raytracer::resize(int w, int h)
     { // RaytraceRenderWidget::resizeGL()
     // resize the render image
     frameBuffer.Resize(w, h);
-    frameBuffer.clear(RGBAValue(125.0f, 125.0f, 125.0f, 255.0f));
     } // RaytraceRenderWidget::resizeGL()
     
 void Raytracer::stopRaytracer() {

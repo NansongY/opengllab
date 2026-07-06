@@ -294,6 +294,16 @@ void mousePos_callback(GLFWwindow * window,double x, double y) {
         renderParameters.ModelArcball.ContinueDrag(scaledX, scaledY);
 }
 
+void window_resized(GLFWwindow * window, int width, int height) {
+    window_width = width;
+    window_height = height;
+
+    if (myRaytracer != NULL) {
+        myRaytracer->stopRaytracer();
+        myRaytracer->resize(int(width / 2.0f), height);
+    }
+}
+
 bool initializeGL() 
 { 
     // Initialise GLFW 
@@ -335,6 +345,7 @@ bool initializeGL()
 	if (!GLEW_ARB_debug_output) return false;
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); 
+	glfwSetWindowSizeCallback(window, window_resized);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mousePos_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -510,6 +521,20 @@ int main(int argc, char**argv)
 		glfwPollEvents();
 	} // Check if the ESC key was pressed or the window was closed 
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0); 
+
+	glDeleteProgram(programID);
+	glDeleteProgram(ssProgramID);
+	glDeleteTextures(1, &RaytracerTextureID);
+	glDeleteVertexArrays(1, &RaytracerVAO);
+
+	for (auto vaoID : vaoIDS) glDeleteVertexArrays(1, &vaoID);
+	for (auto vbID : vbIDS) glDeleteBuffers(1, &vbID);
+	for (auto nbID : nbIDS) glDeleteBuffers(1, &nbID);
+	for (auto tbID : tbIDS) glDeleteBuffers(1, &tbID);
+
+	myRaytracer->stopRaytracer();
+	delete myRaytracer;
+	glfwTerminate();
 	return 0;
 }
 
