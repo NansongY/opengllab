@@ -43,6 +43,7 @@ void Raytracer::resize(int w, int h)
     { // RaytraceRenderWidget::resizeGL()
     // resize the render image
     frameBuffer.Resize(w, h);
+    frameBuffer.clear(RGBAValue(125.0f, 125.0f, 125.0f, 255.0f));
     } // RaytraceRenderWidget::resizeGL()
     
 void Raytracer::stopRaytracer() {
@@ -76,19 +77,19 @@ std::uint8_t linear_to_srgb(float aValue) noexcept
 
 void Raytracer::RaytraceThread()
 {
-    #pragma omp parallel for schedule(dynamic)
-    for(int j = 0; j < frameBuffer.height; j++){ 
-        for(int i = 0; i < frameBuffer.width; i++){ 
-            if (restartRaytrace) {  
+    for(int j = 0; j < frameBuffer.height; j++){
+        if (restartRaytrace) {  
                 raytracingRunning = false; 
                 return; 
             } 
+        #pragma omp parallel for schedule(dynamic)
+        for(int i = 0; i < frameBuffer.width; i++){ 
             Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
             frameBuffer[j][i] = RGBAValue( 
                                linear_to_srgb(color.x), 
                                linear_to_srgb(color.y),  
                                linear_to_srgb(color.z),255); 
-            } 
+        } 
     } 
     raytracingRunning = false;
 }

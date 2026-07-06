@@ -14,6 +14,7 @@ GLFWwindow* window;
 int window_width = 1920; 
 int window_height = 1080;
 Raytracer * myRaytracer;
+GLuint RaytracerTextureID;
 
 void ThreeDToGL(const ThreeDModel& model, 
 vector<array<float,3>>& out_vertices, 
@@ -165,6 +166,15 @@ fragment_file_path)
 	glDeleteShader(FragmentShaderID);
 }
 
+void loadScreenspaceTexture() {
+    glGenTextures(1, &RaytracerTextureID);
+    glBindTexture(GL_TEXTURE_2D, RaytracerTextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, GLsizei(window_width / 2.0f), window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, myRaytracer->frameBuffer.block);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 bool initializeGL() 
 { 
     // Initialise GLFW 
@@ -260,6 +270,14 @@ int main(int argc, char**argv)
 	myRaytracer = new Raytracer(&objects, &renderParameters);
 	myRaytracer->resize(int(window_width / 2.0f), window_height);
 
+	GLuint RaytracerVAO;
+	glGenVertexArrays(1, &RaytracerVAO);
+	glBindVertexArray(RaytracerVAO);
+
+	GLuint ssProgramID;
+	LoadShaders(ssProgramID, "screenspace.vert", "screenspace.frag");
+	loadScreenspaceTexture();
+
 	GLuint programID = glCreateProgram(); 
 	LoadShaders(programID,"Basic.vert","Phong.frag");
 
@@ -351,6 +369,13 @@ int main(int argc, char**argv)
 			// Draw the triangles!
 			glDrawArrays(GL_TRIANGLES, 0, counts[i]);
 		}
+		glUseProgram(ssProgramID);
+		glViewport(GLint(window_width / 2.0f), 0, GLsizei(window_width / 2.0f), window_height);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, RaytracerTextureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, GLsizei(window_width / 2.0f), window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, myRaytracer->frameBuffer.block);
+		glBindVertexArray(RaytracerVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
