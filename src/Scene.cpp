@@ -17,7 +17,7 @@ Scene::Scene(std::vector<ThreeDModel> *texobjs,RenderParameters *renderp)
 
 Matrix4 Scene::getModelview()
 {
-    return Matrix4();
+    return rp->getViewMatrix() * rp->getModelMatrix();
 }
 
 //updateScene will build the scene like we would do for

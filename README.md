@@ -1,3 +1,3 @@
-# results
+# Results
 
-![](./triangle.png)
+![](./cornell_ball.png)
