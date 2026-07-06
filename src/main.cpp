@@ -13,6 +13,11 @@ using namespace std;
 GLFWwindow* window; 
 int window_width = 1920; 
 int window_height = 1080;
+bool launchRaytracer = false;
+byte movementKeys{ 0 };
+double mouseXpos = 0.0;
+double mouseYpos = 0.0;
+RenderParameters renderParameters; //can be at file level. 
 Raytracer * myRaytracer;
 GLuint RaytracerTextureID;
 
@@ -175,6 +180,120 @@ void loadScreenspaceTexture() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void key_callback(GLFWwindow * window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
+        launchRaytracer = true;
+        renderParameters.printSettings();
+    }
+
+    if (key == GLFW_KEY_1 && action == GLFW_RELEASE) {
+        renderParameters.interpolationRendering = !renderParameters.interpolationRendering;
+        renderParameters.printSettings();
+    }
+
+    if (key == GLFW_KEY_2 && action == GLFW_RELEASE) {
+        renderParameters.phongEnabled = !renderParameters.phongEnabled;
+        renderParameters.printSettings();
+    }
+
+    if (key == GLFW_KEY_3 && action == GLFW_RELEASE) {
+        renderParameters.shadowsEnabled = !renderParameters.shadowsEnabled;
+        renderParameters.printSettings();
+    }
+
+    if (key == GLFW_KEY_4 && action == GLFW_RELEASE) {
+        renderParameters.reflectionEnabled = !renderParameters.reflectionEnabled;
+        renderParameters.printSettings();
+    }
+
+    if (key == GLFW_KEY_W) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_FW };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_FW };
+    }
+
+    if (key == GLFW_KEY_S) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_BACK };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_BACK };
+    }
+
+    if (key == GLFW_KEY_D) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_RIGHT };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_RIGHT };
+    }
+
+    if (key == GLFW_KEY_A) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_LEFT };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_LEFT };
+    }
+
+    if (key == GLFW_KEY_Q) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_UP };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_UP };
+    }
+
+    if (key == GLFW_KEY_E) {
+        if (action == GLFW_PRESS)
+            movementKeys |= byte{ BIT_DOWN };
+        if (action == GLFW_RELEASE)
+            movementKeys &= ~byte{ BIT_DOWN };
+    }
+}
+
+void mouse_button_callback(GLFWwindow * window, int button, int action, int mods)
+{
+    float scaledX = float(2.0f * mouseXpos - window_width) / float(window_width);
+    float scaledY = float(window_height - 2.0f * mouseYpos) / float(window_height);
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        renderParameters.CameraArcball.BeginDrag(scaledX, scaledY);
+        movementKeys |= byte{ BIT_LEFTMOUSE };
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        renderParameters.ModelArcball.BeginDrag(scaledX, scaledY);
+        movementKeys |= byte{ BIT_RIGHTMOUSE };
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    {
+        renderParameters.CameraArcball.EndDrag(scaledX, scaledY);
+        movementKeys &= ~byte{ BIT_LEFTMOUSE };
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    {
+        renderParameters.ModelArcball.EndDrag(scaledX, scaledY);
+        movementKeys &= ~byte{ BIT_RIGHTMOUSE };
+    }
+}
+
+void mousePos_callback(GLFWwindow * window,double x, double y) {
+    mouseXpos = x;
+    mouseYpos = y;
+
+    float scaledX = float(2.0f * mouseXpos - window_width) / float(window_width);
+    float scaledY = float(window_height - 2.0f * mouseYpos) / float(window_height);
+
+    if ((movementKeys & byte{ BIT_LEFTMOUSE }) != byte{ 0 })
+        renderParameters.CameraArcball.ContinueDrag(scaledX,scaledY);
+
+    if ((movementKeys & byte{ BIT_RIGHTMOUSE }) != byte{ 0 })
+        renderParameters.ModelArcball.ContinueDrag(scaledX, scaledY);
+}
+
 bool initializeGL() 
 { 
     // Initialise GLFW 
@@ -216,6 +335,9 @@ bool initializeGL()
 	if (!GLEW_ARB_debug_output) return false;
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); 
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mousePos_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwPollEvents(); 
 	
 	return true; 
@@ -253,8 +375,6 @@ int main(int argc, char**argv)
 		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << std::endl;
 		return 0; 
 	} // object read failed
-
-	RenderParameters renderParameters; //can be at file level. 
  
 	renderParameters.findLights(objects); 
 	std::cout << renderParameters.lights.size() << std::endl;
@@ -314,18 +434,26 @@ int main(int argc, char**argv)
 	double lastTime = glfwGetTime(); 
 	int nbFrames = 0; 
 	do { 
-	// Measure speed
+		// Measure speed
     	double currentTime = glfwGetTime(); 
 		float deltaTime = float(currentTime - lastTime); 
 		nbFrames++; 
+
 		if (deltaTime >= 1.0) { // If last prinf() was more than 1sec ago 
 			// printf and reset 
 			printf("%f ms/frame\n", 1000.0 / double(nbFrames)); 
 			nbFrames = 0; 
 			lastTime += 1.0; 
 		} 
+
+		if (launchRaytracer) {
+			myRaytracer->Raytrace();
+			launchRaytracer = false;
+		}
+
 		// Clear the screen 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+		renderParameters.computeMatricesFromInputs(deltaTime, movementKeys);
 		Matrix4 ModelMatrix = renderParameters.getModelMatrix(); 
 		Matrix4 ViewMatrix = renderParameters.getViewMatrix(); 
 		Matrix4 ProjectionMatrix = renderParameters.getProjectionMatrix(float(window_width)/2.0f,float(window_height)); 
