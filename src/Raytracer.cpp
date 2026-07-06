@@ -76,7 +76,21 @@ std::uint8_t linear_to_srgb(float aValue) noexcept
 
 void Raytracer::RaytraceThread()
 {
-    //Tutorial code here!
+    #pragma omp parallel for schedule(dynamic)
+    for(int j = 0; j < frameBuffer.height; j++){ 
+        for(int i = 0; i < frameBuffer.width; i++){ 
+            if (restartRaytrace) {  
+                raytracingRunning = false; 
+                return; 
+            } 
+            Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
+            frameBuffer[j][i] = RGBAValue( 
+                               linear_to_srgb(color.x), 
+                               linear_to_srgb(color.y),  
+                               linear_to_srgb(color.z),255); 
+            } 
+    } 
+    raytracingRunning = false;
 }
 
 

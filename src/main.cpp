@@ -5,6 +5,7 @@
 #include <fstream> 
 #include <sstream>
 #include "ThreeDModel.h" 
+#include "Raytracer.h"
 #include <array>
 
 using namespace std;  
@@ -12,6 +13,7 @@ using namespace std;
 GLFWwindow* window; 
 int window_width = 1920; 
 int window_height = 1080;
+Raytracer * myRaytracer;
 
 void ThreeDToGL(const ThreeDModel& model, 
 vector<array<float,3>>& out_vertices, 
@@ -255,6 +257,8 @@ int main(int argc, char**argv)
 	
 	//setting up opengl 
 	loadModelGL(objects, vaoIDS, vbIDS, nbIDS, tbIDS, counts); 
+	myRaytracer = new Raytracer(&objects, &renderParameters);
+	myRaytracer->resize(int(window_width / 2.0f), window_height);
 
 	GLuint programID = glCreateProgram(); 
 	LoadShaders(programID,"Basic.vert","Phong.frag");
