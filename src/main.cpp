@@ -8,6 +8,10 @@
 #include <array>
 
 using namespace std;  
+//Variables 
+GLFWwindow* window; 
+int window_width = 1920; 
+int window_height = 1080;
 
 void ThreeDToGL(const ThreeDModel& model, 
 vector<array<float,3>>& out_vertices, 
@@ -167,10 +171,7 @@ bool initializeGL()
         cerr << "Failed to initialize GLFW" << endl; 
         return false; 
     } 
-	//Variables 
-	GLFWwindow* window; 
-	int window_width = 1920; 
-	int window_height = 1080;
+	
 	glfwWindowHint(GLFW_SAMPLES, 1); //no anti-aliasing 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5); 
@@ -258,6 +259,100 @@ int main(int argc, char**argv)
 	GLuint programID = glCreateProgram(); 
 	LoadShaders(programID,"Basic.vert","Phong.frag");
 
+	glClearColor(0, 0, 0, 0.0f); 
+	glEnable(GL_FRAMEBUFFER_SRGB); 
+	glEnable(GL_DEPTH_TEST); 
+	glDepthFunc(GL_LESS); 
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW); 
+	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+	glUseProgram(programID); 
+	GLuint MatrixID = glGetUniformLocation(programID, "MVP"); 
+	GLuint ViewMatrixID = glGetUniformLocation(programID, "V"); 
+	GLuint ModelMatrixID = glGetUniformLocation(programID, "M"); 
+	std::vector<GLuint> PosLightIDs; 
+	std::vector<GLuint> ColLightIDs; 
+	//Set the light position and color 
+	int currentLight = 0; 
+	for (Light* l : renderParameters.lights) { 
+		PosLightIDs.push_back(glGetUniformLocation(programID, 
+			("lights[" + std::to_string(currentLight) + "].position").c_str())); 
+		ColLightIDs.push_back(glGetUniformLocation(programID, 
+			("lights[" + std::to_string(currentLight) + "].color").c_str())); 
+		currentLight++; 
+	} 
+	GLuint nLightsID = glGetUniformLocation(programID, "nLights"); 
+	GLuint emissiveID = glGetUniformLocation(programID, "meshMaterial.emissiveColor"); 
+	GLuint diffuseID = glGetUniformLocation(programID, "meshMaterial.diffuseColor"); 
+	GLuint ambientID = glGetUniformLocation(programID, "meshMaterial.ambientColor"); 
+	GLuint specularID = glGetUniformLocation(programID, "meshMaterial.specularColor"); 
+	GLuint shininessID = glGetUniformLocation(programID, "meshMaterial.shininess"); 
+
+	// For speed computation 
+	double lastTime = glfwGetTime(); 
+	int nbFrames = 0; 
+	do { 
+	// Measure speed
+    	double currentTime = glfwGetTime(); 
+		float deltaTime = float(currentTime - lastTime); 
+		nbFrames++; 
+		if (deltaTime >= 1.0) { // If last prinf() was more than 1sec ago 
+			// printf and reset 
+			printf("%f ms/frame\n", 1000.0 / double(nbFrames)); 
+			nbFrames = 0; 
+			lastTime += 1.0; 
+		} 
+		// Clear the screen 
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+		Matrix4 ModelMatrix = renderParameters.getModelMatrix(); 
+		Matrix4 ViewMatrix = renderParameters.getViewMatrix(); 
+		Matrix4 ProjectionMatrix = renderParameters.getProjectionMatrix(float(window_width)/2.0f,float(window_height)); 
+		Matrix4 MVP = ProjectionMatrix * (ViewMatrix * ModelMatrix); 
+	
+		//First pass: Rasterisation 
+		glUseProgram(programID); 
+		// Send our transformation to the currently bound shader,  
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, MVP.columnMajor().coordinates); 
+		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, ModelMatrix.columnMajor().coordinates); 
+		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, ViewMatrix.columnMajor().coordinates); 
+		//Set the light position and color 
+		int cl = 0; 
+		for (Light* l : renderParameters.lights) { 
+			Homogeneous4 lp = l->GetPositionCenter(); 
+			Homogeneous4 c = l->GetColor(); 
+			glUniform3f(PosLightIDs[cl], lp.x, lp.y, lp.z); 
+			glUniform3f(ColLightIDs[cl], c.x, c.y, c.z); 
+			cl++; 
+		} 
+		glUniform1i(nLightsID,currentLight); 
+		// This will draw on the left side
+		glViewport(0, 0, GLsizei(window_width / 2.0f), window_height);
+
+		for (int i = 0; i < vaoIDS.size(); i++) {
+			// Setting material properties
+			Cartesian3 d = objects[i].material->diffuse;
+			Cartesian3 a = objects[i].material->ambient;
+			Cartesian3 s = objects[i].material->specular;
+			Cartesian3 e = objects[i].material->emissive;
+			float shin = objects[i].material->shininess;
+
+			glUniform3f(diffuseID, d.x, d.y, d.z);
+			glUniform3f(ambientID, a.x, a.y, a.z);
+			glUniform3f(specularID, s.x, s.y, s.z);
+			glUniform3f(emissiveID, e.x, e.y, e.z);
+			glUniform1f(shininessID, shin);
+
+			glBindVertexArray(vaoIDS[i]);
+
+			// Draw the triangles!
+			glDrawArrays(GL_TRIANGLES, 0, counts[i]);
+		}
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	} // Check if the ESC key was pressed or the window was closed 
+	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0); 
 	return 0;
 }
 
