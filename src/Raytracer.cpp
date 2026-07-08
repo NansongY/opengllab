@@ -13,6 +13,7 @@
 #include <algorithm>
 // include the header file
 #include "Raytracer.h"
+#include "Ray.h"
 
 #define N_THREADS 16
 #define N_LOOPS 600
@@ -83,7 +84,9 @@ void Raytracer::RaytraceThread()
             } 
         #pragma omp parallel for schedule(dynamic)
         for(int i = 0; i < frameBuffer.width; i++){ 
-            Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
+            // Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
+            Ray r = calculateRay(i, j, !renderParameters->orthoProjection);
+            Homogeneous4 color(fabs(r.direction.x), fabs(r.direction.y), fabs(r.direction.z), 1.0f);
             frameBuffer[j][i] = RGBAValue( 
                                linear_to_srgb(color.x), 
                                linear_to_srgb(color.y),  
@@ -93,7 +96,49 @@ void Raytracer::RaytraceThread()
     raytracingRunning = false;
 }
 
+Ray Raytracer::calculateRay(int pixelx, int pixely, bool perspective)
+{
+    const float width = float(frameBuffer.width);
+    const float height = float(frameBuffer.height);
+    const float aspect = width / height;
 
+    float left, right, bottom, top;
+
+    if (perspective)
+    {
+        const float halfY = renderParameters->near * tanf(renderParameters->fov * 0.5f);
+        const float halfX = halfY * aspect;
+
+        left = -halfX;
+        right = halfX;
+        bottom = -halfY;
+        top = halfY;
+    }
+    else
+    {
+        left = aspect > 1.0f ? -aspect : -1.0f;
+        right = aspect > 1.0f ? aspect : 1.0f;
+        top = aspect > 1.0f ? 1.0f : 1.0f / aspect;
+        bottom = aspect > 1.0f ? -1.0f : -1.0f / aspect;
+    }
+
+    const float u = (frameBuffer.width > 1) ? float(pixelx) / float(frameBuffer.width - 1) : 0.5f;
+    const float v = (frameBuffer.height > 1) ? float(pixely) / float(frameBuffer.height - 1) : 0.5f;
+
+    const float x = left + u * (right - left);
+    const float y = top - v * (top - bottom);
+
+    if (perspective)
+    {
+        Cartesian3 origin(0.0f, 0.0f, 0.0f);
+        Cartesian3 direction(x, y, renderParameters->near);
+        return Ray(origin, direction.unit(), Ray::primary);
+    }
+
+    Cartesian3 origin(x, y, renderParameters->near);
+    Cartesian3 direction(0.0f, 0.0f, 1.0f);
+    return Ray(origin, direction, Ray::primary);
+}
 
     // routine that generates the image
 void Raytracer::Raytrace()
@@ -157,37 +202,37 @@ void Raytracer::RaytraceDebug()
     std::cout << "v1:" << tri.verts[1] << std::endl; 
     std::cout << "v2:" << tri.verts[2] << std::endl; 
  
-    // std::cout << std::endl; 
-    // std::cout << "#Task 2# " << std::endl; 
-    // std::cout << std::endl; 
-    // std::cout << "#One ray to each corner!# " << std::endl; 
-    // Ray r0 = calculateRay(0, 0, true); 
-    // Ray r1 = calculateRay(0, frameBuffer.height-1,true); 
-    // Ray r2 = calculateRay(frameBuffer.width-1, frameBuffer.height-1, true); 
-    // Ray r3 = calculateRay(frameBuffer.width - 1, 0, true); 
-    // std::cout << "pixel is " << 0 <<" "<< 0 << " d: " << r0.direction << std::endl; 
-    // std::cout << "pixel is " << 0 << " " << frameBuffer.height-1 << " d: " << r1.direction << std::endl; 
-    // std::cout << "pixel is " << frameBuffer.width - 1 << " " << frameBuffer.height - 1 << " d: " << r2.direction << std::endl; 
-    // std::cout << "pixel is " << frameBuffer.width - 1 << " " <<0 << " d: " << r3.direction << std::endl; 
+    std::cout << std::endl; 
+    std::cout << "#Task 2# " << std::endl; 
+    std::cout << std::endl; 
+    std::cout << "#One ray to each corner!# " << std::endl; 
+    Ray r0 = calculateRay(0, 0, true); 
+    Ray r1 = calculateRay(0, frameBuffer.height-1,true); 
+    Ray r2 = calculateRay(frameBuffer.width-1, frameBuffer.height-1, true); 
+    Ray r3 = calculateRay(frameBuffer.width - 1, 0, true); 
+    std::cout << "pixel is " << 0 <<" "<< 0 << " d: " << r0.direction << std::endl; 
+    std::cout << "pixel is " << 0 << " " << frameBuffer.height-1 << " d: " << r1.direction << std::endl; 
+    std::cout << "pixel is " << frameBuffer.width - 1 << " " << frameBuffer.height - 1 << " d: " << r2.direction << std::endl; 
+    std::cout << "pixel is " << frameBuffer.width - 1 << " " <<0 << " d: " << r3.direction << std::endl; 
      
-    // std::cout << "#Rays to the center on a diagonal!# " << std::endl; 
+    std::cout << "#Rays to the center on a diagonal!# " << std::endl; 
  
-    // Ray rc = calculateRay(((frameBuffer.width - 1) / 2.0f)-1, ((frameBuffer.height - 1) / 2.0f)-1, true); 
-    // Ray rc1 = calculateRay(((frameBuffer.width-1) / 2.0f), ((frameBuffer.height-1) / 2.0f), true); 
-    // Ray rc2 = calculateRay(((frameBuffer.width - 1) / 2.0f)+1, ((frameBuffer.height - 1) / 2.0f)+1, true); 
-    // Ray rc3 = calculateRay(((frameBuffer.width - 1) / 2.0f) + 2, ((frameBuffer.height - 1) / 2.0f) + 2, true); 
+    Ray rc = calculateRay(((frameBuffer.width - 1) / 2.0f)-1, ((frameBuffer.height - 1) / 2.0f)-1, true); 
+    Ray rc1 = calculateRay(((frameBuffer.width-1) / 2.0f), ((frameBuffer.height-1) / 2.0f), true); 
+    Ray rc2 = calculateRay(((frameBuffer.width - 1) / 2.0f)+1, ((frameBuffer.height - 1) / 2.0f)+1, true); 
+    Ray rc3 = calculateRay(((frameBuffer.width - 1) / 2.0f) + 2, ((frameBuffer.height - 1) / 2.0f) + 2, true); 
  
-    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) - 1 << " " << ((frameBuffer.height - 1) / 2.0f) - 1 << " d: " << rc.direction << std::endl; 
-    // std::cout << "pixel is " << (frameBuffer.width - 1) / 2.0f << " " << ((frameBuffer.height - 1) / 2.0f) << " d: " << rc1.direction << std::endl; 
-    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) +1<< " " << ((frameBuffer.height - 1) / 2.0f) + 1 << " d: " << rc2.direction << std::endl; 
-    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) + 2 << " " << ((frameBuffer.height - 1) / 2.0f) + 2 << " d: " << rc3.direction << std::endl; 
+    std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) - 1 << " " << ((frameBuffer.height - 1) / 2.0f) - 1 << " d: " << rc.direction << std::endl; 
+    std::cout << "pixel is " << (frameBuffer.width - 1) / 2.0f << " " << ((frameBuffer.height - 1) / 2.0f) << " d: " << rc1.direction << std::endl; 
+    std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) +1<< " " << ((frameBuffer.height - 1) / 2.0f) + 1 << " d: " << rc2.direction << std::endl; 
+    std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) + 2 << " " << ((frameBuffer.height - 1) / 2.0f) + 2 << " d: " << rc3.direction << std::endl; 
  
  
-    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 2.0); 
-    // renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
-    // renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
-    // renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
-    // raytraceScene.updateScene(); 
+    renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 2.0); 
+    renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
+    renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
+    renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
+    raytraceScene.updateScene(); 
  
     // Scene::CollisionInfo ci0 = raytraceScene.closestTriangle(r0); 
     // Scene::CollisionInfo ci1 = raytraceScene.closestTriangle(r1); 

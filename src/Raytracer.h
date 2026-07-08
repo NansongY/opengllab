@@ -68,6 +68,7 @@ class Raytracer
     void RaytraceThread();
 	//debug
 	void RaytraceDebug();
+	Ray calculateRay(int pixelx, int pixely, bool perspective);
     private:
 
 	std::atomic<bool> raytracingRunning;
