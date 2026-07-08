@@ -11,8 +11,8 @@
 using namespace std;  
 //Variables 
 GLFWwindow* window; 
-int window_width = 1920; 
-int window_height = 1080;
+int window_width = 2000; 
+int window_height = 1000;
 bool launchRaytracer = false;
 bool debug_on = false;
 byte movementKeys{ 0 };
@@ -357,13 +357,19 @@ bool initializeGL()
 
 int main(int argc, char**argv)
 {
-	if (argc != 3) 
+	if (argc != 3 && argc != 4) 
 	{ // bad arg count 
 	// print an error message 
-	std::cout << "Usage: " << argv[0] << " geometry material" << std::endl; 
+	std::cout << "Usage: " << argv[0] << " geometry material [debug]" << std::endl; 
 	// and leave 
 	return 0; 
 	} // bad arg count 
+
+	if (argc == 4 && string(argv[3]) != "debug")
+	{
+		std::cout << "Usage: " << argv[0] << " geometry material [debug]" << std::endl;
+		return 0;
+	}
 
 	if (!initializeGL()) return -1;
 

@@ -110,52 +110,52 @@ void Raytracer::Raytrace()
     
 void Raytracer::RaytraceDebug()  
 { 
-    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
-    // renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
-    // renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
-    // renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
-    // raytraceScene.updateScene(); 
+    renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
+    renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
+    renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
+    renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
+    raytraceScene.updateScene(); 
      
-    // std::cout << std::endl; 
-    // std::cout << "###############################" << std::endl; 
-    // std::cout << "#Debugging the first few steps# " << std::endl; 
-    // std::cout << "###############################" << std::endl; 
-    // std::cout << std::endl; 
+    std::cout << std::endl; 
+    std::cout << "###############################" << std::endl; 
+    std::cout << "#Debugging the first few steps# " << std::endl; 
+    std::cout << "###############################" << std::endl; 
+    std::cout << std::endl; 
  
-    // std::cout << std::endl; 
-    // std::cout << "#Task 1# " << std::endl; 
-    // std::cout << std::endl; 
-    // std::cout << "#No transformations: # " << std::endl; 
-    // Triangle tri = raytraceScene.triangles[0]; 
-    // std::cout << "v0:"<<tri.verts[0] << std::endl; 
-    // std::cout << "v1:" << tri.verts[1] << std::endl; 
-    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+    std::cout << std::endl; 
+    std::cout << "#Task 1# " << std::endl; 
+    std::cout << std::endl; 
+    std::cout << "#No transformations: # " << std::endl; 
+    Triangle tri = raytraceScene.triangles[0]; 
+    std::cout << "v0:"<<tri.verts[0] << std::endl; 
+    std::cout << "v1:" << tri.verts[1] << std::endl; 
+    std::cout << "v2:" << tri.verts[2] << std::endl; 
  
-    // std::cout << "#Model at z=2, 1 to left: # " << std::endl; 
-    // renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
-    // raytraceScene.updateScene(); 
-    // tri = raytraceScene.triangles[0]; 
-    // std::cout << "v0:" << tri.verts[0] << std::endl; 
-    // std::cout << "v1:" << tri.verts[1] << std::endl; 
-    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+    std::cout << "#Model at z=2, 1 to left: # " << std::endl; 
+    renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
+    raytraceScene.updateScene(); 
+    tri = raytraceScene.triangles[0]; 
+    std::cout << "v0:" << tri.verts[0] << std::endl; 
+    std::cout << "v1:" << tri.verts[1] << std::endl; 
+    std::cout << "v2:" << tri.verts[2] << std::endl; 
  
-    // std::cout << "#Just rotate 180 (signals flip): # " << std::endl; 
-    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
-    // renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
-    // raytraceScene.updateScene(); 
-    // tri = raytraceScene.triangles[0]; 
-    // std::cout << "v0:" << tri.verts[0] << std::endl; 
-    // std::cout << "v1:" << tri.verts[1] << std::endl; 
-    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+    std::cout << "#Just rotate 180 (signals flip): # " << std::endl; 
+    renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
+    renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
+    raytraceScene.updateScene(); 
+    tri = raytraceScene.triangles[0]; 
+    std::cout << "v0:" << tri.verts[0] << std::endl; 
+    std::cout << "v1:" << tri.verts[1] << std::endl; 
+    std::cout << "v2:" << tri.verts[2] << std::endl; 
  
-    // std::cout << "#Rotate 180 and translate: Did it go left? # " << std::endl; 
-    // renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
-    // renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
-    // raytraceScene.updateScene(); 
-    // tri = raytraceScene.triangles[0]; 
-    // std::cout << "v0:" << tri.verts[0] << std::endl; 
-    // std::cout << "v1:" << tri.verts[1] << std::endl; 
-    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+    std::cout << "#Rotate 180 and translate: Did it go left? # " << std::endl; 
+    renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
+    renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
+    raytraceScene.updateScene(); 
+    tri = raytraceScene.triangles[0]; 
+    std::cout << "v0:" << tri.verts[0] << std::endl; 
+    std::cout << "v1:" << tri.verts[1] << std::endl; 
+    std::cout << "v2:" << tri.verts[2] << std::endl; 
  
     // std::cout << std::endl; 
     // std::cout << "#Task 2# " << std::endl; 
