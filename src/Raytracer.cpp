@@ -108,5 +108,97 @@ void Raytracer::Raytrace()
     raytracingRunning = true;
 } // RaytraceRenderWidget::Raytrace()
     
-
+void Raytracer::RaytraceDebug()  
+{ 
+    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
+    // renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
+    // renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
+    // renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
+    // raytraceScene.updateScene(); 
+     
+    // std::cout << std::endl; 
+    // std::cout << "###############################" << std::endl; 
+    // std::cout << "#Debugging the first few steps# " << std::endl; 
+    // std::cout << "###############################" << std::endl; 
+    // std::cout << std::endl; 
+ 
+    // std::cout << std::endl; 
+    // std::cout << "#Task 1# " << std::endl; 
+    // std::cout << std::endl; 
+    // std::cout << "#No transformations: # " << std::endl; 
+    // Triangle tri = raytraceScene.triangles[0]; 
+    // std::cout << "v0:"<<tri.verts[0] << std::endl; 
+    // std::cout << "v1:" << tri.verts[1] << std::endl; 
+    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+ 
+    // std::cout << "#Model at z=2, 1 to left: # " << std::endl; 
+    // renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
+    // raytraceScene.updateScene(); 
+    // tri = raytraceScene.triangles[0]; 
+    // std::cout << "v0:" << tri.verts[0] << std::endl; 
+    // std::cout << "v1:" << tri.verts[1] << std::endl; 
+    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+ 
+    // std::cout << "#Just rotate 180 (signals flip): # " << std::endl; 
+    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 0.0); 
+    // renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
+    // raytraceScene.updateScene(); 
+    // tri = raytraceScene.triangles[0]; 
+    // std::cout << "v0:" << tri.verts[0] << std::endl; 
+    // std::cout << "v1:" << tri.verts[1] << std::endl; 
+    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+ 
+    // std::cout << "#Rotate 180 and translate: Did it go left? # " << std::endl; 
+    // renderParameters->ModelPosition = Cartesian3(-1.0, 0.0, 2.0); 
+    // renderParameters->ModelArcball.currentRotation = Quaternion(0, 0, 1, 0); 
+    // raytraceScene.updateScene(); 
+    // tri = raytraceScene.triangles[0]; 
+    // std::cout << "v0:" << tri.verts[0] << std::endl; 
+    // std::cout << "v1:" << tri.verts[1] << std::endl; 
+    // std::cout << "v2:" << tri.verts[2] << std::endl; 
+ 
+    // std::cout << std::endl; 
+    // std::cout << "#Task 2# " << std::endl; 
+    // std::cout << std::endl; 
+    // std::cout << "#One ray to each corner!# " << std::endl; 
+    // Ray r0 = calculateRay(0, 0, true); 
+    // Ray r1 = calculateRay(0, frameBuffer.height-1,true); 
+    // Ray r2 = calculateRay(frameBuffer.width-1, frameBuffer.height-1, true); 
+    // Ray r3 = calculateRay(frameBuffer.width - 1, 0, true); 
+    // std::cout << "pixel is " << 0 <<" "<< 0 << " d: " << r0.direction << std::endl; 
+    // std::cout << "pixel is " << 0 << " " << frameBuffer.height-1 << " d: " << r1.direction << std::endl; 
+    // std::cout << "pixel is " << frameBuffer.width - 1 << " " << frameBuffer.height - 1 << " d: " << r2.direction << std::endl; 
+    // std::cout << "pixel is " << frameBuffer.width - 1 << " " <<0 << " d: " << r3.direction << std::endl; 
+     
+    // std::cout << "#Rays to the center on a diagonal!# " << std::endl; 
+ 
+    // Ray rc = calculateRay(((frameBuffer.width - 1) / 2.0f)-1, ((frameBuffer.height - 1) / 2.0f)-1, true); 
+    // Ray rc1 = calculateRay(((frameBuffer.width-1) / 2.0f), ((frameBuffer.height-1) / 2.0f), true); 
+    // Ray rc2 = calculateRay(((frameBuffer.width - 1) / 2.0f)+1, ((frameBuffer.height - 1) / 2.0f)+1, true); 
+    // Ray rc3 = calculateRay(((frameBuffer.width - 1) / 2.0f) + 2, ((frameBuffer.height - 1) / 2.0f) + 2, true); 
+ 
+    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) - 1 << " " << ((frameBuffer.height - 1) / 2.0f) - 1 << " d: " << rc.direction << std::endl; 
+    // std::cout << "pixel is " << (frameBuffer.width - 1) / 2.0f << " " << ((frameBuffer.height - 1) / 2.0f) << " d: " << rc1.direction << std::endl; 
+    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) +1<< " " << ((frameBuffer.height - 1) / 2.0f) + 1 << " d: " << rc2.direction << std::endl; 
+    // std::cout << "pixel is " << ((frameBuffer.width - 1) / 2.0f) + 2 << " " << ((frameBuffer.height - 1) / 2.0f) + 2 << " d: " << rc3.direction << std::endl; 
+ 
+ 
+    // renderParameters->ModelPosition = Cartesian3(0.0, 0.0, 2.0); 
+    // renderParameters->CameraPosition = Cartesian3(0.0, 0.0, 0.0); 
+    // renderParameters->ModelArcball = Quaternion(0, 1, 0, 0); 
+    // renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
+    // raytraceScene.updateScene(); 
+ 
+    // Scene::CollisionInfo ci0 = raytraceScene.closestTriangle(r0); 
+    // Scene::CollisionInfo ci1 = raytraceScene.closestTriangle(r1); 
+    // Scene::CollisionInfo ci2 = raytraceScene.closestTriangle(r2); 
+    // Scene::CollisionInfo ci3 = raytraceScene.closestTriangle(r3); 
+     
+    // std::cout << "#Do they hit at initial position? (z=2)# " << std::endl; 
+    // std::cout << ci0.tri.isValid() << "== 0" <<std::endl; 
+    // std::cout << ci1.tri.isValid() << "== 1"<<std::endl; 
+    // std::cout << ci2.tri.isValid() << "== 1"<<std::endl; 
+    // std::cout << ci3.tri.isValid() << "== 1"<<std::endl; 
+ 
+}
 

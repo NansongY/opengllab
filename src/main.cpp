@@ -14,6 +14,7 @@ GLFWwindow* window;
 int window_width = 1920; 
 int window_height = 1080;
 bool launchRaytracer = false;
+bool debug_on = false;
 byte movementKeys{ 0 };
 double mouseXpos = 0.0;
 double mouseYpos = 0.0;
@@ -386,6 +387,16 @@ int main(int argc, char**argv)
 		std::cout << "Read failed for object " << argv[1] << " or material " << argv[2] << std::endl;
 		return 0; 
 	} // object read failed
+
+	if (argc == 4 && string(argv[3]) == "debug") {
+    debug_on = true;
+
+    std::cout << std::endl;
+    std::cout << "#######################################################" << std::endl;
+    std::cout << "#Debugging when you press R. Did you use triangle.obj?#" << std::endl;
+    std::cout << "#######################################################" << std::endl;
+    std::cout << std::endl;
+}
  
 	renderParameters.findLights(objects); 
 	std::cout << renderParameters.lights.size() << std::endl;
@@ -458,6 +469,9 @@ int main(int argc, char**argv)
 		} 
 
 		if (launchRaytracer) {
+			if (debug_on)
+				myRaytracer->RaytraceDebug();
+
 			myRaytracer->Raytrace();
 			launchRaytracer = false;
 		}

@@ -66,6 +66,8 @@ class Raytracer
     void Raytrace();
     //threading stuff
     void RaytraceThread();
+	//debug
+	void RaytraceDebug();
     private:
 
 	std::atomic<bool> raytracingRunning;
