@@ -39,6 +39,13 @@ public:
     Scene(std::vector<ThreeDModel> *texobjs,RenderParameters *renderp);
     void updateScene();
     Matrix4 getModelview();
+
+    struct CollisionInfo{
+        Triangle tri;
+        float t;
+    };
+
+    CollisionInfo closestTriangle(Ray r);
 };
 
 #endif // SCENE_H

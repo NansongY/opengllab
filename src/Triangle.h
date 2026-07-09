@@ -10,18 +10,19 @@ class Triangle
 {
 
 
-public:
-    int triangle_id;
-    Homogeneous4 verts[3];
-    Homogeneous4 normals[3];
-    Homogeneous4 colors[3];
-    Cartesian3 uvs[3];
+    public:
+        int triangle_id;
+        float intersect(Ray r) const;
+        Homogeneous4 verts[3];
+        Homogeneous4 normals[3];
+        Homogeneous4 colors[3];
+        Cartesian3 uvs[3];
 
-    Material *shared_material;
+        Material *shared_material;
 
-    Triangle();
-    void validate(int id);
-    bool isValid();
+        Triangle();
+        void validate(int id);
+        bool isValid();
 
 
 

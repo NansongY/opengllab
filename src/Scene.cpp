@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include <limits>
+#include "Triangle.h"
 
 Scene::Scene(std::vector<ThreeDModel> *texobjs,RenderParameters *renderp)
 {
@@ -101,5 +102,26 @@ void Scene::updateScene()
     }//per object
 }
 
+Scene::CollisionInfo Scene::closestTriangle(Ray r)
+{
+    //TODO method to find the closest triangle!
+    CollisionInfo ci;
+    // ci.t = r.origin.x; // this is just so it compiles warning free
+    ci.tri = Triangle();
+    ci.t = -1.0f;
 
+    float bestT = std::numeric_limits<float>::infinity();
+
+    for (const Triangle& tri : triangles)
+    {
+        float t = tri.intersect(r);
+        if (t > 0.0f && t < bestT)
+        {
+            bestT = t;
+            ci.tri = tri;
+            ci.t = t;
+        }
+    }
+    return ci;
+}
 

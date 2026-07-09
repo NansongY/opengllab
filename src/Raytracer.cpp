@@ -86,7 +86,12 @@ void Raytracer::RaytraceThread()
         for(int i = 0; i < frameBuffer.width; i++){ 
             // Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
             Ray r = calculateRay(i, j, !renderParameters->orthoProjection);
-            Homogeneous4 color(fabs(r.direction.x), fabs(r.direction.y), fabs(r.direction.z), 1.0f);
+            Scene::CollisionInfo ci = raytraceScene.closestTriangle(r);
+            Homogeneous4 color;
+            if (ci.t > 0.0f)
+                color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
+            else
+                color = Homogeneous4(0.0f, 0.0f, 0.0f, 1.0f);
             frameBuffer[j][i] = RGBAValue( 
                                linear_to_srgb(color.x), 
                                linear_to_srgb(color.y),  
@@ -234,16 +239,16 @@ void Raytracer::RaytraceDebug()
     renderParameters->CameraArcball = Quaternion(0, 0, 0, 1); 
     raytraceScene.updateScene(); 
  
-    // Scene::CollisionInfo ci0 = raytraceScene.closestTriangle(r0); 
-    // Scene::CollisionInfo ci1 = raytraceScene.closestTriangle(r1); 
-    // Scene::CollisionInfo ci2 = raytraceScene.closestTriangle(r2); 
-    // Scene::CollisionInfo ci3 = raytraceScene.closestTriangle(r3); 
+    Scene::CollisionInfo ci0 = raytraceScene.closestTriangle(r0); 
+    Scene::CollisionInfo ci1 = raytraceScene.closestTriangle(r1); 
+    Scene::CollisionInfo ci2 = raytraceScene.closestTriangle(r2); 
+    Scene::CollisionInfo ci3 = raytraceScene.closestTriangle(r3); 
      
-    // std::cout << "#Do they hit at initial position? (z=2)# " << std::endl; 
-    // std::cout << ci0.tri.isValid() << "== 0" <<std::endl; 
-    // std::cout << ci1.tri.isValid() << "== 1"<<std::endl; 
-    // std::cout << ci2.tri.isValid() << "== 1"<<std::endl; 
-    // std::cout << ci3.tri.isValid() << "== 1"<<std::endl; 
+    std::cout << "#Do they hit at initial position? (z=2)# " << std::endl; 
+    std::cout << ci0.tri.isValid() << "== 0" <<std::endl; 
+    std::cout << ci1.tri.isValid() << "== 1"<<std::endl; 
+    std::cout << ci2.tri.isValid() << "== 1"<<std::endl; 
+    std::cout << ci3.tri.isValid() << "== 1"<<std::endl; 
  
 }
 
