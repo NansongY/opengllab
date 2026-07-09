@@ -123,8 +123,8 @@ Ray Raytracer::calculateRay(int pixelx, int pixely, bool perspective)
     {
         left = aspect > 1.0f ? -aspect : -1.0f;
         right = aspect > 1.0f ? aspect : 1.0f;
-        top = aspect > 1.0f ? 1.0f : 1.0f / aspect;
-        bottom = aspect > 1.0f ? -1.0f : -1.0f / aspect;
+        top = aspect > 1.0f ? -1.0f : -1.0f / aspect;
+        bottom = aspect > 1.0f ? 1.0f : 1.0f / aspect;
     }
 
     const float u = (frameBuffer.width > 1) ? float(pixelx) / float(frameBuffer.width - 1) : 0.5f;
