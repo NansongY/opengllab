@@ -116,8 +116,8 @@ Ray Raytracer::calculateRay(int pixelx, int pixely, bool perspective)
 
         left = -halfX;
         right = halfX;
-        bottom = -halfY;
-        top = halfY;
+        bottom = halfY;
+        top = -halfY;
     }
     else
     {
