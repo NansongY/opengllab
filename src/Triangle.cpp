@@ -116,7 +116,8 @@ Cartesian3 Triangle::baricentric(Cartesian3 o)
 }
 
 Homogeneous4 Triangle::phongShade(Cartesian3 hitPoint, Cartesian3 normal,
-                                   Cartesian3 lightPos, Cartesian3 lightColor) const
+                                   Cartesian3 lightPos, Cartesian3 lightColor,
+                                   bool inShadow) const
 {
     Cartesian3 e = (Cartesian3(0,0,0) - hitPoint).unit();
     Cartesian3 l = (lightPos - hitPoint).unit();
@@ -125,6 +126,11 @@ Homogeneous4 Triangle::phongShade(Cartesian3 hitPoint, Cartesian3 normal,
     Cartesian3 ambient(shared_material->ambient.x * lightColor.x,
                        shared_material->ambient.y * lightColor.y,
                        shared_material->ambient.z * lightColor.z);
+
+    if (inShadow)
+    {
+        return Homogeneous4(ambient.x, ambient.y, ambient.z, 1.0f);
+    }
 
     // diffuse
     float cosTheta = std::max(0.0f, normal.dot(l));

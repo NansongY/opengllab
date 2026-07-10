@@ -123,11 +123,42 @@ void Raytracer::RaytraceThread()
                         Cartesian3 lp_vcs = lp_vcs_h.Point();
 
                         Homogeneous4 lc = light->GetColor();
+                        Cartesian3 lightColor(lc.x, lc.y, lc.z);
+
+                        bool inShadow = false;
+                        if (renderParameters->shadowsEnabled)
+                        {
+                            Cartesian3 toLight = lp_vcs - hitPoint;
+                            float lightDistance = toLight.length();
+
+                            if (lightDistance > 0.0f)
+                            {
+                                Cartesian3 lightDirection = toLight / lightDistance;
+                                Cartesian3 shadowBiasDirection = normOut;
+                                if (shadowBiasDirection.dot(lightDirection) < 0.0f)
+                                {
+                                    shadowBiasDirection = -1.0f * shadowBiasDirection;
+                                }
+
+                                const float shadowBias = 1e-3f;
+                                Ray shadowRay(hitPoint + shadowBias * shadowBiasDirection,
+                                              lightDirection,
+                                              Ray::secondary);
+                                Scene::CollisionInfo shadowHit = raytraceScene.closestTriangle(shadowRay);
+
+                                if (shadowHit.t > 0.0f && shadowHit.t < lightDistance - shadowBias)
+                                {
+                                    Material* shadowMat = shadowHit.tri.shared_material;
+                                    inShadow = shadowMat == nullptr || !shadowMat->isLight();
+                                }
+                            }
+                        }
 
                         Homogeneous4 contrib = ci.tri.phongShade(
                             hitPoint, normOut,
                             lp_vcs,
-                            Cartesian3(lc.x, lc.y, lc.z));
+                            lightColor,
+                            inShadow);
 
                         color = color + contrib;
                     }
@@ -297,4 +328,3 @@ void Raytracer::RaytraceDebug()
     std::cout << ci3.tri.isValid() << "== 1"<<std::endl; 
  
 }
-
