@@ -17,6 +17,7 @@ class Triangle
         Homogeneous4 normals[3];
         Homogeneous4 colors[3];
         Cartesian3 uvs[3];
+        Cartesian3 baricentric(Cartesian3 o);
 
         Material *shared_material;
 

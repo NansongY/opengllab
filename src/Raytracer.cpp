@@ -87,11 +87,27 @@ void Raytracer::RaytraceThread()
             // Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
             Ray r = calculateRay(i, j, !renderParameters->orthoProjection);
             Scene::CollisionInfo ci = raytraceScene.closestTriangle(r);
-            Homogeneous4 color;
+            Homogeneous4 color(0.0f, 0.0f, 0.0f, 1.0f);
+
             if (ci.t > 0.0f)
-                color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
-            else
-                color = Homogeneous4(0.0f, 0.0f, 0.0f, 1.0f);
+            {
+                Cartesian3 hitPoint = r.origin + ci.t * r.direction;
+                Cartesian3 bc = ci.tri.baricentric(hitPoint);
+
+                Cartesian3 n0 = ci.tri.normals[0].Vector();
+                Cartesian3 n1 = ci.tri.normals[1].Vector();
+                Cartesian3 n2 = ci.tri.normals[2].Vector();
+
+                Cartesian3 normOut = (bc.x * n0 + bc.y * n1 + bc.z * n2).unit();
+
+                if (renderParameters->interpolationRendering)
+                    color = Homogeneous4(std::fabs(normOut.x),
+                                        std::fabs(normOut.y),
+                                        std::fabs(normOut.z),
+                                        1.0f);
+                else
+                    color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
+            }
             frameBuffer[j][i] = RGBAValue( 
                                linear_to_srgb(color.x), 
                                linear_to_srgb(color.y),  

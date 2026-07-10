@@ -51,3 +51,37 @@ float Triangle::intersect(Ray r) const
 
     return -1.0f;
 }
+
+Cartesian3 Triangle::baricentric(Cartesian3 o)
+{
+    Cartesian3 a = verts[0].Point();
+    Cartesian3 b = verts[1].Point();
+    Cartesian3 c = verts[2].Point();
+
+    Cartesian3 v0 = b - a;
+    Cartesian3 v1 = c - a;
+    Cartesian3 v2 = o - a;
+
+    float d00 = v0.dot(v0);
+    float d01 = v0.dot(v1);
+    float d11 = v1.dot(v1);
+    float d20 = v2.dot(v0);
+    float d21 = v2.dot(v1);
+
+    float denom = d00 * d11 - d01 * d01;
+
+    Cartesian3 bc;
+    if (std::fabs(denom) < 1e-8f)
+    {
+        bc.x = 1.0f;
+        bc.y = 0.0f;
+        bc.z = 0.0f;
+        return bc;
+    }
+
+    bc.y = (d11 * d20 - d01 * d21) / denom;
+    bc.z = (d00 * d21 - d01 * d20) / denom;
+    bc.x = 1.0f - bc.y - bc.z;
+
+    return bc;
+}

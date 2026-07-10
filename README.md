@@ -1,3 +1,3 @@
 # Results
 
-![](./ray_hit.png)
+![](./glitch_result.png)
