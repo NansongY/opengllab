@@ -19,34 +19,63 @@ bool Triangle::isValid(){
 
 float Triangle::intersect(Ray r) const
 {
-    const float eps = 1e-6f;
+    const float eps = 1e-6f; // small epsilon to avoid numerical issues
 
-    Cartesian3 a = verts[0].Point();
-    Cartesian3 b = verts[1].Point();
-    Cartesian3 c = verts[2].Point();
+    // Step 1: get triangle vertices
+    Cartesian3 p = verts[0].Point();
+    Cartesian3 q = verts[1].Point();
+    Cartesian3 r2 = verts[2].Point();
 
-    Cartesian3 ab = b - a;
-    Cartesian3 ac = c - a;
-    Cartesian3 n = ab.cross(ac);
+    // Step 2: construct u = q-p, v = r-p  and plane normal n = u × v
+    Cartesian3 u = q - p;
+    Cartesian3 v = r2 - p;
+    Cartesian3 n = u.cross(v);
 
+    // Step 3: plane intersection t = ((p - s)·n) / (l·n)
     float denom = n.dot(r.direction);
     if (std::fabs(denom) < eps)
         return -1.0f;
 
-    float t = n.dot(a - r.origin) / denom;
+    float t = n.dot(p - r.origin) / denom;
     if (t <= eps)
         return -1.0f;
 
-    Cartesian3 p = r.origin + t * r.direction;
+    // Step 4: intersection point o = s + l·t
+    Cartesian3 o = r.origin + t * r.direction;
 
-    float h0 = (b - a).cross(p - a).dot(n);
-    float h1 = (c - b).cross(p - b).dot(n);
-    float h2 = (a - c).cross(p - c).dot(n);
+    // Step 5: project to 2D PCS by dropping the dominant axis of n
+    float ax = std::fabs(n.x), ay = std::fabs(n.y), az = std::fabs(n.z);
 
-    bool allPos = (h0 >= -eps) && (h1 >= -eps) && (h2 >= -eps);
-    bool allNeg = (h0 <= eps) && (h1 <= eps) && (h2 <= eps);
+    float ox, oy, px2, py2, qx, qy, rx, ry;
+    if (ax >= ay && ax >= az) {
+        // drop x, keep (y,z)
+        ox = o.y; oy = o.z;
+        px2 = p.y; py2 = p.z;
+        qx = q.y; qy = q.z;
+        rx = r2.y; ry = r2.z;
+    } else if (ay >= ax && ay >= az) {
+        // drop y, keep (x,z)
+        ox = o.x; oy = o.z;
+        px2 = p.x; py2 = p.z;
+        qx = q.x; qy = q.z;
+        rx = r2.x; ry = r2.z;
+    } else {
+        // drop z, keep (x,y)
+        ox = o.x; oy = o.y;
+        px2 = p.x; py2 = p.y;
+        qx = q.x; qy = q.y;
+        rx = r2.x; ry = r2.y;
+    }
 
-    if (allPos || allNeg)
+    // Step 6: 2D point-in-triangle test (edge functions)
+    float e0 = (qx - px2) * (oy - py2) - (qy - py2) * (ox - px2);
+    float e1 = (rx - qx) * (oy - qy) - (ry - qy) * (ox - qx);
+    float e2 = (px2 - rx) * (oy - ry) - (py2 - ry) * (ox - rx);
+
+    bool inside = (e0 >= -eps && e1 >= -eps && e2 >= -eps)
+               || (e0 <=  eps && e1 <=  eps && e2 <=  eps);
+
+    if (inside)
         return t;
 
     return -1.0f;
