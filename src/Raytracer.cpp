@@ -135,6 +135,9 @@ void Raytracer::RaytraceThread()
                 else
                     color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
             }
+            color.x = std::clamp(color.x, 0.0f, 1.0f);
+            color.y = std::clamp(color.y, 0.0f, 1.0f);
+            color.z = std::clamp(color.z, 0.0f, 1.0f);
             frameBuffer[j][i] = RGBAValue( 
                                linear_to_srgb(color.x), 
                                linear_to_srgb(color.y),  
