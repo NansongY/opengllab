@@ -114,3 +114,37 @@ Cartesian3 Triangle::baricentric(Cartesian3 o)
 
     return bc;
 }
+
+Homogeneous4 Triangle::phongShade(Cartesian3 hitPoint, Cartesian3 normal,
+                                   Cartesian3 lightPos, Cartesian3 lightColor) const
+{
+    Cartesian3 e = (Cartesian3(0,0,0) - hitPoint).unit();
+    Cartesian3 l = (lightPos - hitPoint).unit();
+
+    // ambient
+    Cartesian3 ambient(shared_material->ambient.x * lightColor.x,
+                       shared_material->ambient.y * lightColor.y,
+                       shared_material->ambient.z * lightColor.z);
+
+    // diffuse
+    float cosTheta = std::max(0.0f, normal.dot(l));
+    Cartesian3 diffuse((shared_material->diffuse.x * lightColor.x) * cosTheta,
+                       (shared_material->diffuse.y * lightColor.y) * cosTheta,
+                       (shared_material->diffuse.z * lightColor.z) * cosTheta);
+
+    // specular
+    Cartesian3 B = (l + e).unit();
+    float cosB = std::max(0.0f, normal.dot(B));
+    cosB = std::pow(cosB, shared_material->shininess);
+    cosB *= cosTheta * (shared_material->shininess + 2.0f) / (2.0f * 3.141592653589793f);
+
+    Cartesian3 specular((shared_material->specular.x * lightColor.x) * cosB,
+                        (shared_material->specular.y * lightColor.y) * cosB,
+                        (shared_material->specular.z * lightColor.z) * cosB);
+    
+                        
+    return Homogeneous4(ambient.x + diffuse.x + specular.x,
+                        ambient.y + diffuse.y + specular.y,
+                        ambient.z + diffuse.z + specular.z,
+                        1.0f);
+}

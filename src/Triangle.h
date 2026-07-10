@@ -16,6 +16,10 @@ class Triangle
         Homogeneous4 verts[3];
         Homogeneous4 normals[3];
         Homogeneous4 colors[3];
+        Homogeneous4 phongShade(Cartesian3 hitPoint, 
+                                Cartesian3 normal,
+                                Cartesian3 lightPos, 
+                                Cartesian3 lightColor) const;
         Cartesian3 uvs[3];
         Cartesian3 baricentric(Cartesian3 o);
 

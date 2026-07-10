@@ -105,6 +105,33 @@ void Raytracer::RaytraceThread()
                                         std::fabs(normOut.y),
                                         std::fabs(normOut.z),
                                         1.0f);
+                else if (renderParameters->phongEnabled)
+                {
+                    // emission as base
+                    Material* mat = ci.tri.shared_material;
+                    color = Homogeneous4(mat->emissive.x, mat->emissive.y, mat->emissive.z, 1.0f);
+
+                    Matrix4 modelview = raytraceScene.getModelview();
+
+                    for (Light* light : renderParameters->lights)
+                    {
+                        if (!light->enabled) continue;
+
+                        // transform light position from world to VCS
+                        Homogeneous4 lp_world = light->GetPositionCenter();
+                        Homogeneous4 lp_vcs_h = modelview * lp_world;
+                        Cartesian3 lp_vcs = lp_vcs_h.Point();
+
+                        Homogeneous4 lc = light->GetColor();
+
+                        Homogeneous4 contrib = ci.tri.phongShade(
+                            hitPoint, normOut,
+                            lp_vcs,
+                            Cartesian3(lc.x, lc.y, lc.z));
+
+                        color = color + contrib;
+                    }
+                }
                 else
                     color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
             }
