@@ -69,6 +69,8 @@ class Raytracer
 	//debug
 	void RaytraceDebug();
 	Ray calculateRay(int pixelx, int pixely, bool perspective);
+    Homogeneous4 TraceAndShadeWithRay(Ray r, int bounces, float weight);
+    Ray reflectRay(Ray r, Cartesian3 normal, Cartesian3 hitPoint);
     private:
 
 	std::atomic<bool> raytracingRunning;

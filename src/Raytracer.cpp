@@ -84,88 +84,8 @@ void Raytracer::RaytraceThread()
             } 
         #pragma omp parallel for schedule(dynamic)
         for(int i = 0; i < frameBuffer.width; i++){ 
-            // Homogeneous4 color(i/float(frameBuffer.width), j/float(frameBuffer.height), 0); 
             Ray r = calculateRay(i, j, !renderParameters->orthoProjection);
-            Scene::CollisionInfo ci = raytraceScene.closestTriangle(r);
-            Homogeneous4 color(0.0f, 0.0f, 0.0f, 1.0f);
-
-            if (ci.t > 0.0f)
-            {
-                Cartesian3 hitPoint = r.origin + ci.t * r.direction;
-                Cartesian3 bc = ci.tri.baricentric(hitPoint);
-
-                Cartesian3 n0 = ci.tri.normals[0].Vector();
-                Cartesian3 n1 = ci.tri.normals[1].Vector();
-                Cartesian3 n2 = ci.tri.normals[2].Vector();
-
-                Cartesian3 normOut = (bc.x * n0 + bc.y * n1 + bc.z * n2).unit();
-
-                if (renderParameters->interpolationRendering)
-                    color = Homogeneous4(std::fabs(normOut.x),
-                                        std::fabs(normOut.y),
-                                        std::fabs(normOut.z),
-                                        1.0f);
-                else if (renderParameters->phongEnabled)
-                {
-                    // emission as base
-                    Material* mat = ci.tri.shared_material;
-                    color = Homogeneous4(mat->emissive.x, mat->emissive.y, mat->emissive.z, 1.0f);
-
-                    Matrix4 modelview = raytraceScene.getModelview();
-
-                    for (Light* light : renderParameters->lights)
-                    {
-                        if (!light->enabled) continue;
-
-                        // transform light position from world to VCS
-                        Homogeneous4 lp_world = light->GetPositionCenter();
-                        Homogeneous4 lp_vcs_h = modelview * lp_world;
-                        Cartesian3 lp_vcs = lp_vcs_h.Point();
-
-                        Homogeneous4 lc = light->GetColor();
-                        Cartesian3 lightColor(lc.x, lc.y, lc.z);
-
-                        bool inShadow = false;
-                        if (renderParameters->shadowsEnabled)
-                        {
-                            Cartesian3 toLight = lp_vcs - hitPoint;
-                            float lightDistance = toLight.length();
-
-                            if (lightDistance > 0.0f)
-                            {
-                                Cartesian3 lightDirection = toLight / lightDistance;
-                                Cartesian3 shadowBiasDirection = normOut;
-                                if (shadowBiasDirection.dot(lightDirection) < 0.0f)
-                                {
-                                    shadowBiasDirection = -1.0f * shadowBiasDirection;
-                                }
-
-                                const float shadowBias = 1e-3f;
-                                Ray shadowRay(hitPoint + shadowBias * shadowBiasDirection,
-                                              lightDirection,
-                                              Ray::secondary);
-                                Scene::CollisionInfo shadowHit = raytraceScene.closestTriangle(shadowRay);
-
-                                if (shadowHit.t > 0.0f && shadowHit.t < lightDistance - shadowBias)
-                                {
-                                    Material* shadowMat = shadowHit.tri.shared_material;
-                                    inShadow = shadowMat == nullptr || !shadowMat->isLight();
-                                }
-                            }
-                        }
-
-                        Homogeneous4 contrib = ci.tri.phongShade(
-                            hitPoint, normOut,
-                            lp_vcs,
-                            lightColor,
-                            inShadow);
-
-                        color = color + contrib;
-                    }
-                }
-                else
-                    color = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
-            }
+            Homogeneous4 color = TraceAndShadeWithRay(r, N_BOUNCES, 1.0f);
             color.x = std::clamp(color.x, 0.0f, 1.0f);
             color.y = std::clamp(color.y, 0.0f, 1.0f);
             color.z = std::clamp(color.z, 0.0f, 1.0f);
@@ -220,6 +140,124 @@ Ray Raytracer::calculateRay(int pixelx, int pixely, bool perspective)
     Cartesian3 origin(x, y, renderParameters->near);
     Cartesian3 direction(0.0f, 0.0f, 1.0f);
     return Ray(origin, direction, Ray::primary);
+}
+
+Ray Raytracer::reflectRay(Ray r, Cartesian3 normal, Cartesian3 hitPoint)
+{
+    Cartesian3 direction = r.direction.unit();
+    Cartesian3 n = normal.unit();
+
+    if (direction.dot(n) > 0.0f)
+        n = -1.0f * n;
+
+    Cartesian3 reflectedDirection = (direction - 2.0f * direction.dot(n) * n).unit();
+    const float reflectionBias = 1e-3f;
+
+    return Ray(hitPoint + reflectionBias * reflectedDirection,
+               reflectedDirection,
+               Ray::secondary);
+}
+
+Homogeneous4 Raytracer::TraceAndShadeWithRay(Ray r, int bounces, float weight)
+{
+    if (bounces < 0 || weight <= 0.0f)
+        return Homogeneous4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    Scene::CollisionInfo ci = raytraceScene.closestTriangle(r);
+    if (ci.t <= 0.0f)
+        return Homogeneous4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    Cartesian3 hitPoint = r.origin + ci.t * r.direction;
+    Cartesian3 bc = ci.tri.baricentric(hitPoint);
+
+    Cartesian3 n0 = ci.tri.normals[0].Vector();
+    Cartesian3 n1 = ci.tri.normals[1].Vector();
+    Cartesian3 n2 = ci.tri.normals[2].Vector();
+    Cartesian3 normOut = (bc.x * n0 + bc.y * n1 + bc.z * n2).unit();
+
+    if (renderParameters->interpolationRendering)
+    {
+        return Homogeneous4(std::fabs(normOut.x),
+                            std::fabs(normOut.y),
+                            std::fabs(normOut.z),
+                            1.0f);
+    }
+
+    Material* mat = ci.tri.shared_material;
+    Homogeneous4 localColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    if (mat != nullptr)
+        localColor = Homogeneous4(mat->emissive.x, mat->emissive.y, mat->emissive.z, 1.0f);
+
+    if (renderParameters->phongEnabled && mat != nullptr)
+    {
+        Matrix4 modelview = raytraceScene.getModelview();
+
+        for (Light* light : renderParameters->lights)
+        {
+            if (!light->enabled) continue;
+
+            Homogeneous4 lp_world = light->GetPositionCenter();
+            Homogeneous4 lp_vcs_h = modelview * lp_world;
+            Cartesian3 lp_vcs = lp_vcs_h.Point();
+
+            Homogeneous4 lc = light->GetColor();
+            Cartesian3 lightColor(lc.x, lc.y, lc.z);
+
+            bool inShadow = false;
+            if (renderParameters->shadowsEnabled)
+            {
+                Cartesian3 toLight = lp_vcs - hitPoint;
+                float lightDistance = toLight.length();
+
+                if (lightDistance > 0.0f)
+                {
+                    Cartesian3 lightDirection = toLight / lightDistance;
+                    Cartesian3 shadowBiasDirection = normOut;
+                    if (shadowBiasDirection.dot(lightDirection) < 0.0f)
+                        shadowBiasDirection = -1.0f * shadowBiasDirection;
+
+                    const float shadowBias = 1e-3f;
+                    Ray shadowRay(hitPoint + shadowBias * shadowBiasDirection,
+                                  lightDirection,
+                                  Ray::secondary);
+                    Scene::CollisionInfo shadowHit = raytraceScene.closestTriangle(shadowRay);
+
+                    if (shadowHit.t > 0.0f && shadowHit.t < lightDistance - shadowBias)
+                    {
+                        Material* shadowMat = shadowHit.tri.shared_material;
+                        inShadow = shadowMat == nullptr || !shadowMat->isLight();
+                    }
+                }
+            }
+
+            Homogeneous4 contrib = ci.tri.phongShade(
+                hitPoint,
+                normOut,
+                lp_vcs,
+                lightColor,
+                inShadow);
+
+            localColor = localColor + contrib;
+        }
+    }
+    else if (mat == nullptr || !renderParameters->reflectionEnabled || mat->reflectivity <= 0.0f)
+    {
+        localColor = Homogeneous4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    if (renderParameters->reflectionEnabled &&
+        mat != nullptr &&
+        mat->reflectivity > 0.0f &&
+        bounces > 0)
+    {
+        float mirror = std::clamp(mat->reflectivity, 0.0f, 1.0f);
+        Ray reflectedRay = reflectRay(r, normOut, hitPoint);
+        Homogeneous4 reflectedColor = TraceAndShadeWithRay(reflectedRay, bounces - 1, weight * mirror);
+        localColor = (1.0f - mirror) * localColor + mirror * reflectedColor;
+    }
+
+    return localColor;
 }
 
     // routine that generates the image
